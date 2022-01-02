@@ -1,0 +1,75 @@
+import pandas_datareader.data as pdr
+import datetime
+import matplotlib.pyplot as plt
+import numpy as np
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+start = datetime.datetime(2015,8,1)
+end   = datetime.datetime(2022,1,1)
+
+apple = pdr.DataReader('AAPL','yahoo',start,end)
+amd = pdr.DataReader('AMD','yahoo',start,end)
+alibaba = pdr.DataReader('BABA','yahoo',start,end)
+
+apple.to_csv('Apple_Stock.csv')
+amd.to_csv('AMD_Stock.csv')
+alibaba.to_csv('Alibaba_Stock.csv')
+
+apple['Open'].plot(figsize=(15,7), label = 'Apple Stock Prices')
+amd['Open'].plot(label = 'AMD Stock Prices')
+alibaba['Open'].plot(label = 'Alibaba Group Stock Prices')
+plt.title('Stock Prices of Apple, Alibaba Group and AMD', fontsize = 18)
+plt.ylabel('Price', fontsize = 14)
+plt.xlabel('Date', fontsize = 14)
+plt.legend()
+
+ax = plt.gca()
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+plt.show()
+
+# Volume Traded
+apple['Volume'].plot(figsize=(15,7), label = 'Apple')
+alibaba['Volume'].plot(label = 'Alibaba Group')
+amd['Volume'].plot(label = 'AMD')
+plt.title('Volume', fontsize = 16)
+plt.legend()
+
+plt.show()
+
+apple['Total Traded'] = apple['Open'] * apple['Volume']
+amd['Total Traded'] = amd['Open'] * amd['Volume']
+alibaba['Total Traded'] = alibaba['Open'] * alibaba['Volume']
+
+apple['Total Traded'].plot(figsize=(15,7), label='Apple')
+amd['Total Traded'].plot(label='AMD')
+alibaba['Total Traded'].plot(label='Alibaba Group')
+plt.title('Total Traded', fontsize = 16)
+plt.legend()
+plt.ylabel('Total Traded')
+plt.show()
+
+apple['Total Traded'].argmax()
+
+apple.iloc[[apple['Total Traded'].argmax()]]
+
+apple['Open'].plot(figsize = (15,7), label = 'No moving average')
+apple['MA50'] = apple['Open'].rolling(50).mean()
+apple['MA50'].plot(label = 'MA50')
+apple['MA200'] = apple['Open'].rolling(200).mean()
+apple['MA200'].plot(label = 'MA200')
+plt.legend()
+plt.title('Apple Price', fontsize = 16)
+plt.ylabel('Price($)',fontsize = 14)
+plt.xlabel('Date',fontsize = 14)
+plt.xticks(rotation=0)
+plt.show()
+
+from pandas.plotting import scatter_matrix
+import pandas as pd
+
+tech_comp = pd.concat([apple['Open'], alibaba['Open'], amd['Open']], axis = 1)
+tech_comp.columns = ['Apple Open', 'Alibaba Group Open', 'AMD Open']
+
+scatter_matrix(tech_comp, figsize = (8,8), hist_kwds={'bins':50})
+
