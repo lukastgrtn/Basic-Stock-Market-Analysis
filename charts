@@ -23,9 +23,6 @@ plt.ylabel('Price', fontsize = 14)
 plt.xlabel('Date', fontsize = 14)
 plt.legend()
 
-ax = plt.gca()
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
 plt.show()
 
 # Volume Traded
@@ -40,7 +37,6 @@ plt.show()
 apple['Total Traded'] = apple['Open'] * apple['Volume']
 amd['Total Traded'] = amd['Open'] * amd['Volume']
 alibaba['Total Traded'] = alibaba['Open'] * alibaba['Volume']
-
 apple['Total Traded'].plot(figsize=(15,7), label='Apple')
 amd['Total Traded'].plot(label='AMD')
 alibaba['Total Traded'].plot(label='Alibaba Group')
@@ -70,6 +66,28 @@ import pandas as pd
 
 tech_comp = pd.concat([apple['Open'], alibaba['Open'], amd['Open']], axis = 1)
 tech_comp.columns = ['Apple Open', 'Alibaba Group Open', 'AMD Open']
-
 scatter_matrix(tech_comp, figsize = (8,8), hist_kwds={'bins':50})
+plt.show()
+
+from mpl_finance import candlestick_ohlc
+from matplotlib.dates import DateFormatter, date2num, DayLocator, MONDAY
+from matplotlib.dates import WeekdayLocator
+
+apple_reset=apple.loc['2020-01':'2020-01'].reset_index()
+
+apple_reset['date_ax'] = apple_reset['Date'].apply(lambda date: date2num(date))
+
+apple_values = [tuple(vals) for  vals in apple_reset[['date_ax', 'Open', 'High', 'Low', 'Close']].values]
+
+mondays = WeekdayLocator(MONDAY)
+alldays = DayLocator()
+weekFormatter = DateFormatter('%b %d')
+dayFormatter = DateFormatter('%d')
+
+fig, ax = plt.subplots(figsize = (15,7))
+candlestick_ohlc(ax, apple_values, width = 0.9)
+plt.show()
+
+
+
 
