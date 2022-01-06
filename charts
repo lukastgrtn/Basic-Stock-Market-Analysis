@@ -22,7 +22,6 @@ plt.title('Stock Prices of Apple, Alibaba Group and AMD', fontsize = 18)
 plt.ylabel('Price', fontsize = 14)
 plt.xlabel('Date', fontsize = 14)
 plt.legend()
-
 plt.show()
 
 # Volume Traded
@@ -31,7 +30,6 @@ alibaba['Volume'].plot(label = 'Alibaba Group')
 amd['Volume'].plot(label = 'AMD')
 plt.title('Volume', fontsize = 16)
 plt.legend()
-
 plt.show()
 
 apple['Total Traded'] = apple['Open'] * apple['Volume']
@@ -84,9 +82,49 @@ alldays = DayLocator()
 weekFormatter = DateFormatter('%b %d')
 dayFormatter = DateFormatter('%d')
 
-fig, ax = plt.subplots(figsize = (15,7))
-candlestick_ohlc(ax, apple_values, width = 0.9)
+fig, ax = plt.subplots()
+candlestick_ohlc(ax, apple_values, width = 0.6, colorup = 'g')
 plt.show()
+
+# Daily Percentage Change
+
+apple['return'] = (apple['Close']/apple['Close'].shift(1)) - 1
+amd['return'] = (amd['Close']/amd['Close'].shift(1)) - 1
+alibaba['return'] = (alibaba['Close']/apple['Close'].shift(1)) - 1
+
+apple['return'].hist(bins = 50, label = 'Apple', figsize = (13,6))
+amd['return'].hist(bins = 50, label = 'AMD')
+alibaba['return'].hist(bins = 50, label = 'Alibaba Group')
+plt.legend()
+plt.show()
+
+apple['return'].plot(kind = 'kde', label='Apple', figsize=(13,6))
+amd['return'].plot(kind = 'kde', label='AMD')
+alibaba['return'].plot(kind = 'kde', label='Alibaba Group')
+plt.legend()
+plt.show()
+
+box_df = pd.concat([apple['return'], amd['return'], alibaba['return']], axis = 1)
+box_df.columns=['Apple returns', 'AMD returns', 'Alibaba Group returns']
+box_df.plot(kind='box', figsize=(16,6))
+
+scatter_matrix(box_df, figsize=(8,8), hist_kwds={'bins':50}, alpha = 0.25)
+plt.show()
+
+# Cumulative Return
+
+apple['Cumulutive Return'] = (1+apple['return']).cumprod()
+amd['Cumulutive Return'] = (1+amd['return']).cumprod()
+alibaba['Cumulutive Return'] = (1+alibaba['return']).cumprod()
+
+apple['Cumulutive Return'].plot(label='Apple',figsize=(15,7))
+amd['Cumulutive Return'].plot(label='AMD')
+alibaba['Cumulutive Return'].plot(label='Alibaba Group')
+plt.legend()
+plt.show()
+
+
+
 
 
 
