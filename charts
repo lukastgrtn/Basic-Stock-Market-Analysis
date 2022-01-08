@@ -4,124 +4,125 @@ import matplotlib.pyplot as plt
 import numpy as np
 get_ipython().run_line_magic('matplotlib', 'inline')
 
-start = datetime.datetime(2015,8,1)
-end   = datetime.datetime(2022,1,1)
+start = datetime.datetime(2010, 1, 1)
+end = datetime.datetime(2022, 1, 1)
 
-apple = pdr.DataReader('AAPL','yahoo',start,end)
-amd = pdr.DataReader('AMD','yahoo',start,end)
-alibaba = pdr.DataReader('BABA','yahoo',start,end)
 
-apple.to_csv('Apple_Stock.csv')
-amd.to_csv('AMD_Stock.csv')
-alibaba.to_csv('Alibaba_Stock.csv')
+ms = pdr.DataReader('MS', 'yahoo', start, end)
+jpm = pdr.DataReader('JPM', 'yahoo', start, end)
+gs = pdr.DataReader('GS', 'yahoo', start, end)
 
-apple['Open'].plot(figsize=(15,7), label = 'Apple Stock Prices')
-amd['Open'].plot(label = 'AMD Stock Prices')
-alibaba['Open'].plot(label = 'Alibaba Group Stock Prices')
-plt.title('Stock Prices of Apple, Alibaba Group and AMD', fontsize = 18)
-plt.ylabel('Price', fontsize = 14)
-plt.xlabel('Date', fontsize = 14)
+ms.to_csv('Morgan_Stanley_Stock.csv')
+jpm.to_csv('JP_Morgan_Stock.csv')
+gs.to_csv('Goldman_Sachs_Stock.csv')
+
+# Stock Prices
+ms['Open'].plot(figsize=(15,7), label='Morgan Stanley Prices')
+jpm['Open'].plot(label='JPMorgan Prices')
+gs['Open'].plot(label='Goldman Sachs Prices')
+plt.ylabel('Price')
+plt.title('Stock Prices of Morgan Stanley, JPMorgan and Goldman Sachs', size=16)
+plt.grid(axis = 'y', alpha = 1)
+plt.grid(axis = 'x', alpha = 1)
+plt.rcParams['axes.axisbelow'] = True
 plt.legend()
 plt.show()
 
-# Volume Traded
-apple['Volume'].plot(figsize=(15,7), label = 'Apple')
-alibaba['Volume'].plot(label = 'Alibaba Group')
-amd['Volume'].plot(label = 'AMD')
-plt.title('Volume', fontsize = 16)
+# Volume
+ms['Volume'].plot(figsize=(15,7), label='Morgan Stanley')
+jpm['Volume'].plot(label='JPMorgan')
+gs['Volume'].plot(label='Goldman Sachs')
+plt.legend()
+plt.title('Volume of Morgan Stanley, JPMorgan and Goldman Sachs', size=16)
+plt.grid('y', alpha=1)
+plt.grid('x', alpha=1)
+plt.rcParams['axes.axisbelow'] = True
+plt.show()
+
+# Total Traded
+ms['Total Traded'] = ms['Open']*ms['Volume']
+jpm['Total Traded'] = jpm['Open']*jpm['Volume']
+gs['Total Traded'] = gs['Open']*gs['Volume']
+
+ms['Total Traded'].plot(figsize=(15,7), label='Morgan Stanley')
+jpm['Total Traded'].plot(label='JPMorgan')
+gs['Total Traded'].plot(label='Goldman Sachs')
+plt.title('Total Traded of Morgan Stanley, JPMorgan and Goldman Sachs', size=16)
+plt.grid('y', alpha=1)
+plt.grid('x', alpha=1)
+plt.rcParams['axes.axisbelow'] = True
 plt.legend()
 plt.show()
 
-apple['Total Traded'] = apple['Open'] * apple['Volume']
-amd['Total Traded'] = amd['Open'] * amd['Volume']
-alibaba['Total Traded'] = alibaba['Open'] * alibaba['Volume']
-apple['Total Traded'].plot(figsize=(15,7), label='Apple')
-amd['Total Traded'].plot(label='AMD')
-alibaba['Total Traded'].plot(label='Alibaba Group')
-plt.title('Total Traded', fontsize = 16)
+# Moving Averages
+gs['Open'].plot(figsize=(15,7), label='Goldman Sachs', c='orange')
+plt.title('Goldman Sachs Stock Prices', size=16)
+
+gs['50MA']=gs['Open'].rolling(50).mean()
+gs['200MA']=gs['Open'].rolling(200).mean()
+
+gs['50MA'].plot(label='50MA', c='green')
+gs['200MA'].plot(label='200MA', c='black')
+plt.grid('y', alpha=1)
+plt.grid('x', alpha=1)
+plt.ylabel('Price')
+plt.rcParams['axes.axisbelow'] = True
 plt.legend()
-plt.ylabel('Total Traded')
-plt.show()
-
-apple['Total Traded'].argmax()
-
-apple.iloc[[apple['Total Traded'].argmax()]]
-
-apple['Open'].plot(figsize = (15,7), label = 'No moving average')
-apple['MA50'] = apple['Open'].rolling(50).mean()
-apple['MA50'].plot(label = 'MA50')
-apple['MA200'] = apple['Open'].rolling(200).mean()
-apple['MA200'].plot(label = 'MA200')
-plt.legend()
-plt.title('Apple Price', fontsize = 16)
-plt.ylabel('Price($)',fontsize = 14)
-plt.xlabel('Date',fontsize = 14)
-plt.xticks(rotation=0)
 plt.show()
 
 from pandas.plotting import scatter_matrix
 import pandas as pd
 
-tech_comp = pd.concat([apple['Open'], alibaba['Open'], amd['Open']], axis = 1)
-tech_comp.columns = ['Apple Open', 'Alibaba Group Open', 'AMD Open']
-scatter_matrix(tech_comp, figsize = (8,8), hist_kwds={'bins':50})
+investments_funds=pd.concat([ms['Open'], jpm['Open'], gs['Open']], axis = 1)
+investments_funds.columns=['Morgan Stanley Open', 'JPMorgan Open', 'Goldman Sachs Open']
+
+scatter_matrix(investments_funds, figsize=(8,8), hist_kwds={'bins':50})
 plt.show()
 
-from mpl_finance import candlestick_ohlc
-from matplotlib.dates import DateFormatter, date2num, DayLocator, MONDAY
-from matplotlib.dates import WeekdayLocator
+# Daily Change
+ms['Daily_Change']=(ms['Close']/ms['Close'].shift(1)) - 1
+jpm['Daily_Change']=(jpm['Close']/jpm['Close'].shift(1)) - 1
+gs['Daily_Change']=(gs['Close']/gs['Close'].shift(1)) - 1
 
-apple_reset=apple.loc['2020-01':'2020-01'].reset_index()
-
-apple_reset['date_ax'] = apple_reset['Date'].apply(lambda date: date2num(date))
-
-apple_values = [tuple(vals) for  vals in apple_reset[['date_ax', 'Open', 'High', 'Low', 'Close']].values]
-
-mondays = WeekdayLocator(MONDAY)
-alldays = DayLocator()
-weekFormatter = DateFormatter('%b %d')
-dayFormatter = DateFormatter('%d')
-
-fig, ax = plt.subplots()
-candlestick_ohlc(ax, apple_values, width = 0.6, colorup = 'g')
-plt.show()
-
-# Daily Percentage Change
-
-apple['return'] = (apple['Close']/apple['Close'].shift(1)) - 1
-amd['return'] = (amd['Close']/amd['Close'].shift(1)) - 1
-alibaba['return'] = (alibaba['Close']/apple['Close'].shift(1)) - 1
-
-apple['return'].hist(bins = 50, label = 'Apple', figsize = (13,6))
-amd['return'].hist(bins = 50, label = 'AMD')
-alibaba['return'].hist(bins = 50, label = 'Alibaba Group')
+ms['Daily_Change'].hist(bins=50, figsize=(13,6), label='Morgan Stanley')
+jpm['Daily_Change'].hist(bins=50, label='JPMorgan')
+gs['Daily_Change'].hist(bins=50, label="Goldman Sachs")
 plt.legend()
+plt.title('Return on Morgan Stanley, JPMorgan and Goldman Sachs', size=16)
+plt.rcParams['axes.axisbelow'] = True
 plt.show()
 
-apple['return'].plot(kind = 'kde', label='Apple', figsize=(13,6))
-amd['return'].plot(kind = 'kde', label='AMD')
-alibaba['return'].plot(kind = 'kde', label='Alibaba Group')
+ms['Daily_Change'].plot(figsize=(15,7), kind='kde', label='Morgan Stanley')
+jpm['Daily_Change'].plot(figsize=(15,7), kind='kde', label='JPMorgan')
+gs['Daily_Change'].plot(figsize=(15,7), kind='kde', label='Goldman Sachs')
 plt.legend()
+plt.title('Return on Morgan Stanley, JPMorgan and Goldmansachs', size=16)
+plt.grid('y', alpha=1)
+plt.grid('x', alpha=1)
+plt.rcParams['axes.axisbelow'] = True
 plt.show()
 
-box_df = pd.concat([apple['return'], amd['return'], alibaba['return']], axis = 1)
-box_df.columns=['Apple returns', 'AMD returns', 'Alibaba Group returns']
-box_df.plot(kind='box', figsize=(16,6))
+box_df= pd.concat([ms['Daily_Change'], jpm['Daily_Change'], gs['Daily_Change']], keys=['Morgan Stanley Returns', 'JPMorgan Returns', 'Goldman Sachs Returns'], axis=1)
+box_df.plot(figsize=(15,7), kind='box')
+plt.show()
 
-scatter_matrix(box_df, figsize=(8,8), hist_kwds={'bins':50}, alpha = 0.25)
+scatter_matrix(box_df, figsize=(8,8), hist_kwds={'bins':50}, alpha=0.25)
 plt.show()
 
 # Cumulative Return
+ms['Cumulative Return'] = (1+ms['Daily_Change']).cumprod()
+jpm['Cumulative Return'] = (1+jpm['Daily_Change']).cumprod()
+gs['Cumulative Return'] = (1+gs['Daily_Change']).cumprod()
 
-apple['Cumulutive Return'] = (1+apple['return']).cumprod()
-amd['Cumulutive Return'] = (1+amd['return']).cumprod()
-alibaba['Cumulutive Return'] = (1+alibaba['return']).cumprod()
-
-apple['Cumulutive Return'].plot(label='Apple',figsize=(15,7))
-amd['Cumulutive Return'].plot(label='AMD')
-alibaba['Cumulutive Return'].plot(label='Alibaba Group')
+ms['Cumulative Return'].plot(figsize=(15,7), label='Morgan Stanley')
+jpm['Cumulative Return'].plot(label='JPMorgan')
+gs['Cumulative Return'].plot(label='Goldman Sachs')
 plt.legend()
+plt.title('Cumulative Return on Morgan Stanley, JPMorgan and Goldman Sachs', size=16)
+plt.grid('y')
+plt.grid('x')
 plt.show()
+
 
 
 
